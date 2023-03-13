@@ -3,7 +3,6 @@ import json
 import hashlib
 from tkinter import *
 
-
 def verif_rules(str): #On va vérifier si le mot de passe est possible
     verification = False
     if len(str) >= 8:
@@ -14,7 +13,7 @@ def verif_rules(str): #On va vérifier si le mot de passe est possible
                         for i in str:
                             if i.isnumeric():
                                 for i in str:
-                                    if i.isalpha() == False and i.isnumeric() == False:
+                                    if i.isalpha() == False and i.isnumeric() == False: #Je n'ai pas utilisé la liste, même si c'est pas particulièrment plus
                                         verification = True
     return verification
                                     
