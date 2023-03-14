@@ -93,11 +93,11 @@ def mot_de_passe(mdp:str,user:str): #La ou on vérifie tous les impératifs du m
 def afficher():
     with open("motdepasse.json","r") as fichier:
         contenu = json.load(fichier)
-        motdepasses = ""
-        for i in contenu.values():
-            motdepasses += i[0]["mdp"]
-            motdepasses += "\n"
-        showinfo("Les mots de passes",contenu)
+        passwords = ""
+        for i in contenu["motdepasse"]:
+            passwords += i["mdp"]
+            passwords += "\n"
+        showinfo("Les Mots De Passes",passwords)
     
 fenetre = Tk()
 fenetre.title("Accueuil")
@@ -163,7 +163,14 @@ def supprimer():
     with open("motdepasse.json","w") as fichier:
         json.dump(jso, fichier)
                 
-
+def voirUser():
+    with open("motdepasse.json","r") as fichier:
+        contenu = json.load(fichier)
+        usernames = ""
+        for i in contenu["motdepasse"]:
+            usernames += i["user"]
+            usernames += "\n"
+        showinfo("Les usernames",usernames)
 def affichermdp():
     global lastuser
     with open("motdepasse.json","r") as fichier:
@@ -183,7 +190,6 @@ def changemdp(newMdp):
     print(newMdp)
     listdico1 = []
     if verif_rules(newMdp) == True and verif_same(hachage(newMdp)) == True:
-        print("yes")
         with open("motdepasse.json","r") as fichier:
             contenu = json.load(fichier)
             for i in contenu["motdepasse"]:
@@ -195,13 +201,12 @@ def changemdp(newMdp):
         with open("motdepasse.json","w") as fichier:
             json.dump(jso, fichier)
     else:
-        print("non")
+        return False
 
 def userAdmin(olduser,newuser):
     global lastuser
     listdico1 = []
     if newuser != "" and verif_user(newuser) == True:
-        print("yes")
         with open("motdepasse.json","r") as fichier:
             contenu = json.load(fichier)
             for i in contenu["motdepasse"]:
@@ -218,7 +223,6 @@ def passwordAdmin(user,password):
     global lastuser
     listdico1 = []
     if verif_rules(password) and verif_same(hachage(password)) == True:
-        print("yes")
         with open("motdepasse.json","r") as fichier:
             contenu = json.load(fichier)
             for i in contenu["motdepasse"]:
@@ -235,7 +239,6 @@ def suprAdmin(user,newuser):
     global lastuser
     listdico1 = []
     if user == newuser:
-        print("yes")
         with open("motdepasse.json","r") as fichier:
             contenu = json.load(fichier)
             for i in contenu["motdepasse"]:
@@ -365,6 +368,7 @@ def openUserWindow(admin):
         menu1.add_command(label="Changer un nom d'utilisateur", command=openAdminUsername)
         menu1.add_command(label="changer un mot de passe", command=openAdminPassword)
         menu1.add_command(label="Supprimer un compte", command=openSuprAdmin)
+        menu1.add_command(label="Voir les users",command=voirUser)
         menubar.add_cascade(label="Connecté en tant que '{}' l'admin".format(lastuser), menu=menu1)
     else:
         menubar = Menu(fenetreUser)
@@ -380,4 +384,5 @@ menu1.add_command(label="Afficher", command=afficher)
 menubar.add_cascade(label="Mot de passe", menu=menu1)
 fenetre.config(menu=menubar)
 fenetre.mainloop()
+
 
