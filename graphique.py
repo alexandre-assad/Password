@@ -52,8 +52,8 @@ def verif_user(user):  #Comme pour les mots de passes, on vérifie cette fois l'
                 return False
         return True
     
-def databaseMdp(mdp:str,user:str): #Pour mettre le fichier hasher dans un fichier
-    dictmdp = {"mdp":mdp,"user":user}     #On créer un dictionnaire, car le fichier est une liste de dictionnaire
+def databaseMdp(mdp:str,user:str,message = []): #Pour mettre le fichier hasher dans un fichier
+    dictmdp = {"mdp":mdp,"user":user,"message":message}     #On créer un dictionnaire, car le fichier est une liste de dictionnaire
     with open ("motdepasse.json","r+") as fichier:
         donnees = json.load(fichier)
         donnees["motdepasse"].append(dictmdp)
@@ -161,7 +161,7 @@ def supprimer():
                 listdico1.append(i)
     jso = {"motdepasse":listdico1}
     with open("motdepasse.json","w") as fichier:
-        json.dump(jso, fichier)
+        json.dump(jso, fichier,indent=4)
                 
 def voirUser():
     with open("motdepasse.json","r") as fichier:
@@ -194,12 +194,12 @@ def changemdp(newMdp):
             contenu = json.load(fichier)
             for i in contenu["motdepasse"]:
                 if i["user"] == lastuser:
-                    listdico1.append({"mdp":hachage(newMdp),"user":lastuser})
+                    listdico1.append({"mdp":hachage(newMdp),"user":lastuser,"message":i["message"]})
                 else: 
                     listdico1.append(i)
         jso = {"motdepasse":listdico1}
         with open("motdepasse.json","w") as fichier:
-            json.dump(jso, fichier)
+            json.dump(jso, fichier,indent=4)
     else:
         return False
 
@@ -211,12 +211,12 @@ def userAdmin(olduser,newuser):
             contenu = json.load(fichier)
             for i in contenu["motdepasse"]:
                 if i["user"] == olduser:
-                    listdico1.append({"mdp":i["mdp"],"user":newuser})
+                    listdico1.append({"mdp":i["mdp"],"user":newuser,"message":i["message"]})
                 else: 
                     listdico1.append(i)
         jso = {"motdepasse":listdico1}
         with open("motdepasse.json","w") as fichier:
-            json.dump(jso, fichier)
+            json.dump(jso, fichier,indent=4)
     else:
         return False 
 def passwordAdmin(user,password):
@@ -227,12 +227,12 @@ def passwordAdmin(user,password):
             contenu = json.load(fichier)
             for i in contenu["motdepasse"]:
                 if i["user"] == user:
-                    listdico1.append({"mdp":hachage(password),"user":user})
+                    listdico1.append({"mdp":hachage(password),"user":user,'message':i["message"]})
                 else: 
                     listdico1.append(i)
         jso = {"motdepasse":listdico1}
         with open("motdepasse.json","w") as fichier:
-            json.dump(jso, fichier)
+            json.dump(jso, fichier,indent=4)
     else:
         return False 
 def suprAdmin(user,newuser):
@@ -246,9 +246,48 @@ def suprAdmin(user,newuser):
                     listdico1.append(i)
         jso = {"motdepasse":listdico1}
         with open("motdepasse.json","w") as fichier:
-            json.dump(jso, fichier)
+            json.dump(jso, fichier,indent=4)
     else:
         return False
+def Envoiemessage(user,msg):
+    global lastuser
+    listdico1 = []
+    if verif_user(user) == False:
+        with open("motdepasse.json","r") as fichier:
+            contenu = json.load(fichier)
+            for i in contenu["motdepasse"]:
+                if i["user"] == user:
+                    newMessage = i["message"]
+                    newMessage.append([str(msg),"Envoyé par {}".format(lastuser)])
+                    listdico1.append({"mdp":i["mdp"],"user":user,'message': newMessage})
+                else: 
+                    listdico1.append(i)
+        jso = {"motdepasse":listdico1}
+        with open("motdepasse.json","w") as fichier:
+            json.dump(jso, fichier,indent=4)
+    else:
+        return False
+    
+def suprmessage(user):
+    listdico1 = []
+    with open("motdepasse.json","r") as fichier:
+            contenu = json.load(fichier)
+            for i in contenu["motdepasse"]:
+                if i["user"] == user:
+                    listdico1.append({"mdp":i["mdp"],"user":user,'message': []})
+                else: 
+                    listdico1.append(i)
+    jso = {"motdepasse":listdico1}
+    with open("motdepasse.json","w") as fichier:
+            json.dump(jso, fichier,indent=4)
+def viewMessage():
+    global lastuser
+    with open("motdepasse.json","r") as fichier:
+        contenu = json.load(fichier)
+        for i in contenu["motdepasse"]:
+            if i["user"] == lastuser:
+                showinfo("Vos Messages",i["message"])
+                suprmessage(lastuser)
 #command bouton
 def alert():
     showinfo("alerte", "Bravo!")
@@ -281,6 +320,28 @@ def openTest():
     newFrame.pack(expand=YES)
     fenetreUser.config(menu=menubar)
     
+def openMessage():
+    global newpassword
+    fenetreUser = Toplevel(fenetre,cursor="target")
+    fenetreUser.title("New Window")
+    fenetreUser.geometry("1080x720")
+    fenetreUser.minsize(480,360)
+    fenetreUser.config(background="black")
+    newFrame = Frame(fenetreUser)
+    newFrame.config(background="black")
+    labelUser = Label(newFrame,text="L'utilisateur",background="black",fg="green",font=("Arial",25))
+    labelUser.pack()
+    username = Entry(newFrame)
+    username.pack()
+    username.config(background="black",fg="green")
+    labelNewUser = Label(newFrame,text="Envoyer un message",background="black",fg="green",font=("Arial",25))
+    labelNewUser.pack()
+    message = Entry(newFrame)
+    message.config(background="black",fg="green")
+    message.pack()
+    boutonGame=Button(newFrame, text="Envoyer",  background="green",fg="white",command=lambda: [Envoiemessage(username.get(),message.get()), fenetreUser.destroy()])
+    boutonGame.pack()
+    newFrame.pack(expand=YES)
 def openAdminUsername():
     global newpassword
     fenetreUser = Toplevel(fenetre,cursor="target")
@@ -365,6 +426,8 @@ def openUserWindow(admin):
         labelAdmin.pack()
         menubar = Menu(fenetreUser)
         menu1 = Menu(menubar, tearoff=0)
+        menu1.add_command(label="Envoyer un message",command=openMessage)
+        menu1.add_command(label="Voir ses messages",command=viewMessage)
         menu1.add_command(label="Changer un nom d'utilisateur", command=openAdminUsername)
         menu1.add_command(label="changer un mot de passe", command=openAdminPassword)
         menu1.add_command(label="Supprimer un compte", command=openSuprAdmin)
@@ -373,6 +436,8 @@ def openUserWindow(admin):
     else:
         menubar = Menu(fenetreUser)
         menu1 = Menu(menubar, tearoff=0)
+        menu1.add_command(label="Envoyer un message",command=openMessage)
+        menu1.add_command(label="Voir ses messages",command=viewMessage)
         menu1.add_command(label="Supprimer son compte", command=supprimer)
         menu1.add_command(label="Voir son mot de passe", command=affichermdp)
         menu1.add_command(label="Changer son mot de passe", command=openTest)
