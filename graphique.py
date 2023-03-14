@@ -72,11 +72,11 @@ def connection(mdp,user): #Si le bon utilisateur a le bon mot de passe (un combi
     
 def mot_de_passe(mdp:str,user:str): #La ou on vérifie tous les impératifs du mot de passe et de l'username
     if verif_rules(mdp) == True and user != "":
-        if connection(hachage(mdp),user):
-                if verif_admin(mdp,user):
+        if connection(hachage(mdp),user): #On vérifie s'il se connecte
+                if verif_admin(mdp,user): #on vérifie si admin
                     openUserWindow(True)
                 else:
-                    openUserWindow(False) #Si connexion, on lance un spaceinvader que j'ai fait à l'aide d'un tuto : pas de mérite mais du temps quand même :'( 
+                    openUserWindow(False) #Si connexion, on lance la fenetre user (avec admin ou non)
         elif verif_same(hachage(mdp)) == True and verif_user(user):
             error.config(text="Le mot de passe est valable",fg="blue") #On vérifie si la création du compte est possible
             mdp = hachage(mdp) #On hache le mdp et l'ajoute à la base de données
@@ -89,7 +89,7 @@ def mot_de_passe(mdp:str,user:str): #La ou on vérifie tous les impératifs du m
         
     
     
-#la fonction afficher, présent dans la menuBar de la fenetre
+#la fonction afficher, présent dans la menuBar de la fenetre, elle affiches tous les mdp
 def afficher():
     with open("motdepasse.json","r") as fichier:
         contenu = json.load(fichier)
@@ -99,6 +99,7 @@ def afficher():
             passwords += "\n"
         showinfo("Les Mots De Passes",passwords)
     
+#creation inteface graphique
 fenetre = Tk()
 fenetre.title("Accueuil")
 fenetre.geometry("1080x720")
@@ -108,7 +109,8 @@ frame = Frame(fenetre)
 frame.config(background="black")
 mdp = ""
 lastuser=""
-def entrer():
+
+def entrer(): #fonction pour prendre les valeurs des entry (username et password) lors de la connexion
     global lastuser
     user = my_username.get()
     lastuser = user
@@ -117,7 +119,7 @@ def entrer():
     my_password.delete(0,END)
     my_username.delete(0,END)
 
-def generer():
+def generer(): #fonction pour générer un mdp aléatoire
     taille_min = 12
     taille_max = 18
     password = ""
@@ -127,19 +129,20 @@ def generer():
     my_password.delete(0,END)
     my_password.insert(0,password)
 
-    
+#User   
 labelUser=Label(frame,text="Nom d'Utilisateur",font=("Courrier",15),background="black",fg="green")
 labelUser.pack()
 my_username = Entry(frame)
 my_username.config(background="black",fg="green")
 my_username.pack()
     
+#password
 labelPassword=Label(frame,text="Mot de Passe",font=("Courrier",15),background="black",fg="green")
 labelPassword.pack()
-#Bouton et input
 my_password = Entry(frame)
 my_password.config(background="black",fg="green")
 my_password.pack()
+#Boutons
 bouton=Button(frame, text="Valider",  background="green",fg="white",command=entrer)
 bouton.pack(side=RIGHT, padx=50, pady=10)
 boutonGenerer=Button(frame, text="Générer", background="green",fg="white",command=generer)
@@ -151,7 +154,7 @@ error.pack()
 frame.pack(expand=YES)
 
 #supprimer
-def supprimer():
+def supprimer(): #la fonction pour supprimer son compte
     global lastuser
     listdico1 = []
     with open("motdepasse.json","r") as fichier:
@@ -163,7 +166,7 @@ def supprimer():
     with open("motdepasse.json","w") as fichier:
         json.dump(jso, fichier,indent=4)
                 
-def voirUser():
+def voirUser(): #la fonction pour voir tous les users (fonction admin)
     with open("motdepasse.json","r") as fichier:
         contenu = json.load(fichier)
         usernames = ""
@@ -171,7 +174,7 @@ def voirUser():
             usernames += i["user"]
             usernames += "\n"
         showinfo("Les usernames",usernames)
-def affichermdp():
+def affichermdp(): #la fonction pour afficher son mot de passe 
     global lastuser
     with open("motdepasse.json","r") as fichier:
         contenu = json.load(fichier)
@@ -179,15 +182,14 @@ def affichermdp():
             if i["user"] == lastuser:
                 showinfo("Votre Mot De Passe",i["mdp"])
          
-def validemdp():
+def validemdp(): #la fonction pour prendre l'entry du nouveau mdp
     mdp = newpassword.get()
     changemdp(mdp)
     newpassword.delete(0,END)
 
            
-def changemdp(newMdp):
+def changemdp(newMdp): #La fonction pour changer son mot de passe
     global lastuser
-    print(newMdp)
     listdico1 = []
     if verif_rules(newMdp) == True and verif_same(hachage(newMdp)) == True:
         with open("motdepasse.json","r") as fichier:
@@ -203,7 +205,7 @@ def changemdp(newMdp):
     else:
         return False
 
-def userAdmin(olduser,newuser):
+def userAdmin(olduser,newuser): #la fonction pour changer un utilisateur (fonction admin)
     global lastuser
     listdico1 = []
     if newuser != "" and verif_user(newuser) == True:
@@ -219,7 +221,7 @@ def userAdmin(olduser,newuser):
             json.dump(jso, fichier,indent=4)
     else:
         return False 
-def passwordAdmin(user,password):
+def passwordAdmin(user,password): #la fonction pour changer un mot de passe (fonction admin)
     global lastuser
     listdico1 = []
     if verif_rules(password) and verif_same(hachage(password)) == True:
@@ -235,7 +237,7 @@ def passwordAdmin(user,password):
             json.dump(jso, fichier,indent=4)
     else:
         return False 
-def suprAdmin(user,newuser):
+def suprAdmin(user,newuser): #La fonction pour supprimer quelquun (fonction admin)
     global lastuser
     listdico1 = []
     if user == newuser:
@@ -249,7 +251,7 @@ def suprAdmin(user,newuser):
             json.dump(jso, fichier,indent=4)
     else:
         return False
-def Envoiemessage(user,msg):
+def Envoiemessage(user,msg): #La fonction pour envoyer un message
     global lastuser
     listdico1 = []
     if verif_user(user) == False:
@@ -258,7 +260,7 @@ def Envoiemessage(user,msg):
             for i in contenu["motdepasse"]:
                 if i["user"] == user:
                     newMessage = i["message"]
-                    newMessage.append([str(msg),"Envoyé par {}".format(lastuser)])
+                    newMessage.append([str(msg),"Envoye par {}".format(lastuser)])
                     listdico1.append({"mdp":i["mdp"],"user":user,'message': newMessage})
                 else: 
                     listdico1.append(i)
@@ -268,7 +270,7 @@ def Envoiemessage(user,msg):
     else:
         return False
     
-def suprmessage(user):
+def suprmessage(user): #La fonction qui supprime les messages d'un utilisateur
     listdico1 = []
     with open("motdepasse.json","r") as fichier:
             contenu = json.load(fichier)
@@ -280,7 +282,7 @@ def suprmessage(user):
     jso = {"motdepasse":listdico1}
     with open("motdepasse.json","w") as fichier:
             json.dump(jso, fichier,indent=4)
-def viewMessage():
+def viewMessage(): #La fonction pour voir ses message
     global lastuser
     with open("motdepasse.json","r") as fichier:
         contenu = json.load(fichier)
@@ -289,13 +291,12 @@ def viewMessage():
                 showinfo("Vos Messages",i["message"])
                 suprmessage(lastuser)
 #command bouton
-def alert():
-    showinfo("alerte", "Bravo!")
-def jouer():
+
+def jouer(): #Pour jouer à space invader
     os.system('SpaceInverd.py')
 menubar = Menu(fenetre)
 
-def openTest():
+def openTest(): #La fenetre pour changer son mot de passe
     global newpassword
     fenetreUser = Toplevel(fenetre,cursor="target")
     fenetreUser.title("New Window")
@@ -310,7 +311,7 @@ def openTest():
     newpassword.config(background="black",fg="green")
     newpassword.pack()
     boutonGame=Button(newFrame, text="Accepter",  background="green",fg="white",command=lambda: [validemdp(), fenetreUser.destroy()])
-    boutonGame.pack()
+    boutonGame.pack()#Le bouton fait la fonction validemdp
     menubar = Menu(fenetreUser)
     menu1 = Menu(menubar, tearoff=0)
     menu1.add_command(label="Supprimer son compte", command=supprimer)
@@ -320,7 +321,7 @@ def openTest():
     newFrame.pack(expand=YES)
     fenetreUser.config(menu=menubar)
     
-def openMessage():
+def openMessage(): #La fenetre pour envoyer un message
     global newpassword
     fenetreUser = Toplevel(fenetre,cursor="target")
     fenetreUser.title("New Window")
@@ -340,9 +341,9 @@ def openMessage():
     message.config(background="black",fg="green")
     message.pack()
     boutonGame=Button(newFrame, text="Envoyer",  background="green",fg="white",command=lambda: [Envoiemessage(username.get(),message.get()), fenetreUser.destroy()])
-    boutonGame.pack()
+    boutonGame.pack() #Le bouton fait la fonction Envoiemessage
     newFrame.pack(expand=YES)
-def openAdminUsername():
+def openAdminUsername(): #La fenetre de l'administrateur qui change le pseudo de quelqu'un
     global newpassword
     fenetreUser = Toplevel(fenetre,cursor="target")
     fenetreUser.title("New Window")
@@ -362,10 +363,10 @@ def openAdminUsername():
     newuser.config(background="black",fg="green")
     newuser.pack()
     boutonGame=Button(newFrame, text="Accepter",  background="green",fg="white",command=lambda: [userAdmin(olduser.get(),newuser.get()), fenetreUser.destroy()])
-    boutonGame.pack()
+    boutonGame.pack() #Le bouton fait la fonction userAdmin
     newFrame.pack(expand=YES)
     
-def openAdminPassword():
+def openAdminPassword(): #La fenetre de l'admin qui change le mdp de quelquun 
     global newpassword
     fenetreUser = Toplevel(fenetre,cursor="target")
     fenetreUser.title("New Window")
@@ -385,9 +386,9 @@ def openAdminPassword():
     newpass.config(background="black",fg="green")
     newpass.pack()
     boutonGame=Button(newFrame, text="Accepter",  background="green",fg="white",command=lambda: [passwordAdmin(olduser.get(),newpass.get()), fenetreUser.destroy()])
-    boutonGame.pack()
+    boutonGame.pack() #Le bouton fait la fonction passwordAdmin
     newFrame.pack(expand=YES)
-def openSuprAdmin():
+def openSuprAdmin(): #La fenetre de l'admin qui supprime quelqu'un
     global newpassword
     fenetreUser = Toplevel(fenetre,cursor="target")
     fenetreUser.title("New Window")
@@ -407,9 +408,9 @@ def openSuprAdmin():
     newuser.config(background="black",fg="green")
     newuser.pack()
     boutonGame=Button(newFrame, text="Accepter",  background="green",fg="white",command=lambda: [suprAdmin(olduser.get(),newuser.get()), fenetreUser.destroy()])
-    boutonGame.pack()
+    boutonGame.pack() #Le bouton fait la fonction suprAdmin
     newFrame.pack(expand=YES)
-def openUserWindow(admin):
+def openUserWindow(admin): #La fenetre pour l'user connectés (admin ou non)
     fenetreUser = Toplevel(fenetre,cursor="target")
     fenetreUser.title("New Window")
     fenetreUser.geometry("1080x720")
@@ -420,32 +421,33 @@ def openUserWindow(admin):
     labelConnect = Label(newFrame,text="Vous voilà connecté {}".format(lastuser,str(admin)),background="black",fg="green",font=("Arial",25))
     labelConnect.pack()
     boutonGame=Button(newFrame, text="Jouer",  background="green",fg="white",command=jouer)
-    boutonGame.pack()
-    if admin:
+    boutonGame.pack() #Le bouton fait la fonction jouer
+    if admin: #L'admin aura un menu différent
         labelAdmin = Label(newFrame,text="Vous Voilà Monsieur L'admin",background="black",fg="green",font=("Arial",15))
         labelAdmin.pack()
         menubar = Menu(fenetreUser)
         menu1 = Menu(menubar, tearoff=0)
         menu1.add_command(label="Envoyer un message",command=openMessage)
-        menu1.add_command(label="Voir ses messages",command=viewMessage)
+        menu1.add_command(label="Voir ses messages",command=viewMessage) #fait la commande viewMessage
         menu1.add_command(label="Changer un nom d'utilisateur", command=openAdminUsername)
         menu1.add_command(label="changer un mot de passe", command=openAdminPassword)
         menu1.add_command(label="Supprimer un compte", command=openSuprAdmin)
-        menu1.add_command(label="Voir les users",command=voirUser)
+        menu1.add_command(label="Voir les users",command=voirUser) #fait la commande VoirUser
         menubar.add_cascade(label="Connecté en tant que '{}' l'admin".format(lastuser), menu=menu1)
     else:
         menubar = Menu(fenetreUser)
         menu1 = Menu(menubar, tearoff=0)
         menu1.add_command(label="Envoyer un message",command=openMessage)
-        menu1.add_command(label="Voir ses messages",command=viewMessage)
-        menu1.add_command(label="Supprimer son compte", command=supprimer)
-        menu1.add_command(label="Voir son mot de passe", command=affichermdp)
+        menu1.add_command(label="Voir ses messages",command=viewMessage) #fait la commande viewMessage
+        menu1.add_command(label="Supprimer son compte", command=supprimer) #fait la commande supprimer
+        menu1.add_command(label="Voir son mot de passe", command=affichermdp) #fait la commande affichemdp
         menu1.add_command(label="Changer son mot de passe", command=openTest)
         menubar.add_cascade(label="Connecté en tant que '{}'".format(lastuser), menu=menu1)
     newFrame.pack(expand=YES)
     fenetreUser.config(menu=menubar)
-menu1 = Menu(menubar, tearoff=0)
-menu1.add_command(label="Afficher", command=afficher)
+#Menu du menu de connexion
+menu1 = Menu(menubar, tearoff=0) 
+menu1.add_command(label="Afficher", command=afficher) #fait la commande afficher
 menubar.add_cascade(label="Mot de passe", menu=menu1)
 fenetre.config(menu=menubar)
 fenetre.mainloop()
