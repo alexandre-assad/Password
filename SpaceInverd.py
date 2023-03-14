@@ -2,6 +2,7 @@ import random
 import math
 import pygame
 
+#J'ai réalisé ce jeux grâce au Tuto Youtube https://www.youtube.com/watch?v=FfWpgLFMI7w de freeCodeCamp.org, je le remercie
 
 #Initialization
 pygame.init()

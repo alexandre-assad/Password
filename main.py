@@ -3,6 +3,9 @@ import json
 import hashlib
 from tkinter import *
 
+#première version sans l'inteface graphique 
+#l'interface graphique est dans le fichier graphique.py
+
 def verif_rules(str): #On va vérifier si le mot de passe est possible
     verification = False
     if len(str) >= 8:

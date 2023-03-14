@@ -4,6 +4,7 @@ import random
 import string
 import json
 import hashlib
+from dotenv import load_dotenv
 from tkinter import *
 from tkinter.messagebox import *
 from tkinter import filedialog as fd
@@ -22,7 +23,14 @@ def verif_rules(str): #On va vérifier si le mot de passe est possible
                                         verification = True
     return verification
                                     
-       
+
+def verif_admin(mdp,user):
+    load_dotenv(dotenv_path="admin")
+    if user == os.getenv("USER") and hachage(mdp) == os.getenv("PASSWORD"):
+        return True
+    else:
+        return False
+    
 def verif_same(mdp): #Pour vérifieir si le mot de passe existe déjà
     with open("motdepasse.json","r") as fichier: #On ouvre pour parcourir le fichier JSON
         contenu = json.load(fichier)
@@ -65,7 +73,10 @@ def connection(mdp,user): #Si le bon utilisateur a le bon mot de passe (un combi
 def mot_de_passe(mdp:str,user:str): #La ou on vérifie tous les impératifs du mot de passe et de l'username
     if verif_rules(mdp) == True and user != "":
         if connection(hachage(mdp),user):
-                openNewWindow(user) #Si connexion, on lance un spaceinvader que j'ai fait à l'aide d'un tuto : pas de mérite mais du temps quand même :'( 
+                if verif_admin(mdp,user):
+                    openUserWindow(True)
+                else:
+                    openUserWindow(False) #Si connexion, on lance un spaceinvader que j'ai fait à l'aide d'un tuto : pas de mérite mais du temps quand même :'( 
         elif verif_same(hachage(mdp)) == True and verif_user(user):
             error.config(text="Le mot de passe est valable",fg="blue") #On vérifie si la création du compte est possible
             mdp = hachage(mdp) #On hache le mdp et l'ajoute à la base de données
@@ -89,6 +100,7 @@ def afficher():
         showinfo("Les mots de passes",contenu)
     
 fenetre = Tk()
+fenetre.title("Accueuil")
 fenetre.geometry("1080x720")
 fenetre.minsize(480,360)
 fenetre.config(background="black")
@@ -159,7 +171,81 @@ def affichermdp():
         for i in contenu["motdepasse"]:
             if i["user"] == lastuser:
                 showinfo("Votre Mot De Passe",i["mdp"])
-        
+         
+def validemdp():
+    mdp = newpassword.get()
+    changemdp(mdp)
+    newpassword.delete(0,END)
+
+           
+def changemdp(newMdp):
+    global lastuser
+    print(newMdp)
+    listdico1 = []
+    if verif_rules(newMdp) == True and verif_same(hachage(newMdp)) == True:
+        print("yes")
+        with open("motdepasse.json","r") as fichier:
+            contenu = json.load(fichier)
+            for i in contenu["motdepasse"]:
+                if i["user"] == lastuser:
+                    listdico1.append({"mdp":hachage(newMdp),"user":lastuser})
+                else: 
+                    listdico1.append(i)
+        jso = {"motdepasse":listdico1}
+        with open("motdepasse.json","w") as fichier:
+            json.dump(jso, fichier)
+    else:
+        print("non")
+
+def userAdmin(olduser,newuser):
+    global lastuser
+    listdico1 = []
+    if newuser != "" and verif_user(newuser) == True:
+        print("yes")
+        with open("motdepasse.json","r") as fichier:
+            contenu = json.load(fichier)
+            for i in contenu["motdepasse"]:
+                if i["user"] == olduser:
+                    listdico1.append({"mdp":i["mdp"],"user":newuser})
+                else: 
+                    listdico1.append(i)
+        jso = {"motdepasse":listdico1}
+        with open("motdepasse.json","w") as fichier:
+            json.dump(jso, fichier)
+    else:
+        return False 
+def passwordAdmin(user,password):
+    global lastuser
+    listdico1 = []
+    if verif_rules(password) and verif_same(hachage(password)) == True:
+        print("yes")
+        with open("motdepasse.json","r") as fichier:
+            contenu = json.load(fichier)
+            for i in contenu["motdepasse"]:
+                if i["user"] == user:
+                    listdico1.append({"mdp":hachage(password),"user":user})
+                else: 
+                    listdico1.append(i)
+        jso = {"motdepasse":listdico1}
+        with open("motdepasse.json","w") as fichier:
+            json.dump(jso, fichier)
+    else:
+        return False 
+def suprAdmin(user,newuser):
+    global lastuser
+    listdico1 = []
+    if user == newuser:
+        print("yes")
+        with open("motdepasse.json","r") as fichier:
+            contenu = json.load(fichier)
+            for i in contenu["motdepasse"]:
+                if i["user"] != user:
+                    listdico1.append(i)
+        jso = {"motdepasse":listdico1}
+        with open("motdepasse.json","w") as fichier:
+            json.dump(jso, fichier)
+    else:
+        return False
 #command bouton
 def alert():
     showinfo("alerte", "Bravo!")
@@ -167,23 +253,126 @@ def jouer():
     os.system('SpaceInverd.py')
 menubar = Menu(fenetre)
 
-def openNewWindow(user):
-    fenetreUser = Toplevel(fenetre)
+def openTest():
+    global newpassword
+    fenetreUser = Toplevel(fenetre,cursor="target")
     fenetreUser.title("New Window")
     fenetreUser.geometry("1080x720")
     fenetreUser.minsize(480,360)
     fenetreUser.config(background="black")
     newFrame = Frame(fenetreUser)
     newFrame.config(background="black")
-    labelConnect = Label(newFrame,text="Vous voilà connecté {}".format(user),background="black",fg="green",font=("Arial",25))
+    labelConnect = Label(newFrame,text="Nouveau Mot De Passe",background="black",fg="green",font=("Arial",25))
     labelConnect.pack()
-    boutonGame=Button(newFrame, text="Jouer",  background="green",fg="white",command=jouer)
+    newpassword = Entry(newFrame)
+    newpassword.config(background="black",fg="green")
+    newpassword.pack()
+    boutonGame=Button(newFrame, text="Accepter",  background="green",fg="white",command=lambda: [validemdp(), fenetreUser.destroy()])
     boutonGame.pack()
     menubar = Menu(fenetreUser)
     menu1 = Menu(menubar, tearoff=0)
     menu1.add_command(label="Supprimer son compte", command=supprimer)
     menu1.add_command(label="Voir son mot de passe", command=affichermdp)
-    menubar.add_cascade(label="Connecté", menu=menu1)
+    menu1.add_command(label="Changer son mot de passe", command=openTest)
+    menubar.add_cascade(label="Connecté en tant que '{}'".format(lastuser), menu=menu1)
+    newFrame.pack(expand=YES)
+    fenetreUser.config(menu=menubar)
+    
+def openAdminUsername():
+    global newpassword
+    fenetreUser = Toplevel(fenetre,cursor="target")
+    fenetreUser.title("New Window")
+    fenetreUser.geometry("1080x720")
+    fenetreUser.minsize(480,360)
+    fenetreUser.config(background="black")
+    newFrame = Frame(fenetreUser)
+    newFrame.config(background="black")
+    labelUser = Label(newFrame,text="L'utilisateur",background="black",fg="green",font=("Arial",25))
+    labelUser.pack()
+    olduser = Entry(newFrame)
+    olduser.pack()
+    olduser.config(background="black",fg="green")
+    labelNewUser = Label(newFrame,text="Le nouveau nom d'utilisateur",background="black",fg="green",font=("Arial",25))
+    labelNewUser.pack()
+    newuser = Entry(newFrame)
+    newuser.config(background="black",fg="green")
+    newuser.pack()
+    boutonGame=Button(newFrame, text="Accepter",  background="green",fg="white",command=lambda: [userAdmin(olduser.get(),newuser.get()), fenetreUser.destroy()])
+    boutonGame.pack()
+    newFrame.pack(expand=YES)
+    
+def openAdminPassword():
+    global newpassword
+    fenetreUser = Toplevel(fenetre,cursor="target")
+    fenetreUser.title("New Window")
+    fenetreUser.geometry("1080x720")
+    fenetreUser.minsize(480,360)
+    fenetreUser.config(background="black")
+    newFrame = Frame(fenetreUser)
+    newFrame.config(background="black")
+    labelUser = Label(newFrame,text="L'utilisateur",background="black",fg="green",font=("Arial",25))
+    labelUser.pack()
+    olduser = Entry(newFrame)
+    olduser.pack()
+    olduser.config(background="black",fg="green")
+    labelNewUser = Label(newFrame,text="Le nouveau mot de passe",background="black",fg="green",font=("Arial",25))
+    labelNewUser.pack()
+    newpass = Entry(newFrame)
+    newpass.config(background="black",fg="green")
+    newpass.pack()
+    boutonGame=Button(newFrame, text="Accepter",  background="green",fg="white",command=lambda: [passwordAdmin(olduser.get(),newpass.get()), fenetreUser.destroy()])
+    boutonGame.pack()
+    newFrame.pack(expand=YES)
+def openSuprAdmin():
+    global newpassword
+    fenetreUser = Toplevel(fenetre,cursor="target")
+    fenetreUser.title("New Window")
+    fenetreUser.geometry("1080x720")
+    fenetreUser.minsize(480,360)
+    fenetreUser.config(background="black")
+    newFrame = Frame(fenetreUser)
+    newFrame.config(background="black")
+    labelUser = Label(newFrame,text="L'utilisateur",background="black",fg="green",font=("Arial",25))
+    labelUser.pack()
+    olduser = Entry(newFrame)
+    olduser.pack()
+    olduser.config(background="black",fg="green")
+    labelNewUser = Label(newFrame,text="Confirmer l'utilisateur à supprimer",background="black",fg="green",font=("Arial",20))
+    labelNewUser.pack()
+    newuser = Entry(newFrame)
+    newuser.config(background="black",fg="green")
+    newuser.pack()
+    boutonGame=Button(newFrame, text="Accepter",  background="green",fg="white",command=lambda: [suprAdmin(olduser.get(),newuser.get()), fenetreUser.destroy()])
+    boutonGame.pack()
+    newFrame.pack(expand=YES)
+def openUserWindow(admin):
+    fenetreUser = Toplevel(fenetre,cursor="target")
+    fenetreUser.title("New Window")
+    fenetreUser.geometry("1080x720")
+    fenetreUser.minsize(480,360)
+    fenetreUser.config(background="black")
+    newFrame = Frame(fenetreUser)
+    newFrame.config(background="black")
+    labelConnect = Label(newFrame,text="Vous voilà connecté {}".format(lastuser,str(admin)),background="black",fg="green",font=("Arial",25))
+    labelConnect.pack()
+    boutonGame=Button(newFrame, text="Jouer",  background="green",fg="white",command=jouer)
+    boutonGame.pack()
+    if admin:
+        labelAdmin = Label(newFrame,text="Vous Voilà Monsieur L'admin",background="black",fg="green",font=("Arial",15))
+        labelAdmin.pack()
+        menubar = Menu(fenetreUser)
+        menu1 = Menu(menubar, tearoff=0)
+        menu1.add_command(label="Changer un nom d'utilisateur", command=openAdminUsername)
+        menu1.add_command(label="changer un mot de passe", command=openAdminPassword)
+        menu1.add_command(label="Supprimer un compte", command=openSuprAdmin)
+        menubar.add_cascade(label="Connecté en tant que '{}' l'admin".format(lastuser), menu=menu1)
+    else:
+        menubar = Menu(fenetreUser)
+        menu1 = Menu(menubar, tearoff=0)
+        menu1.add_command(label="Supprimer son compte", command=supprimer)
+        menu1.add_command(label="Voir son mot de passe", command=affichermdp)
+        menu1.add_command(label="Changer son mot de passe", command=openTest)
+        menubar.add_cascade(label="Connecté en tant que '{}'".format(lastuser), menu=menu1)
     newFrame.pack(expand=YES)
     fenetreUser.config(menu=menubar)
 menu1 = Menu(menubar, tearoff=0)
